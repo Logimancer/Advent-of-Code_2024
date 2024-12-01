@@ -1,4 +1,4 @@
-use std::{ env, fs, fs::File, io::{ self, BufRead }, path::Path };
+use std::{ env, fs::File, io::{ self, BufRead }, path::Path };
 
 struct List<T> {
     column_1: Vec<T>,
@@ -18,7 +18,7 @@ fn main() {
 
     let file_path = &args[1];
 
-    let mut list: List<u64> = List::new();
+    let mut list: List<i64> = List::new();
 
     //create list of u64 numbers
     if let Ok(lines) = read_lines(file_path) {
@@ -29,8 +29,18 @@ fn main() {
         }
     }
 
-    println!("{} {}", list.column_1[0], list.column_2[0]);
+    //order lists
+    list.column_1.sort_unstable();
+    list.column_2.sort_unstable();
 
+    //do arithmatic on each number
+    
+    while !list.column_1.is_empty() & !list.column_2.is_empty() {
+        let column_1 = list.column_1.pop().unwrap();
+        let column_2 = list.column_2.pop().unwrap();
+        let differnce = column_1.abs_diff(column_2);
+        println!("The difference between columnt_1 ({}) and column_2 ({}) is: {}", column_1, column_2, differnce);
+    };
 
 }
 
