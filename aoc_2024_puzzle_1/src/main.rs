@@ -67,5 +67,5 @@ fn main() {
     //add every number in vector
     let answer: u64 = differences.iter().sum();
 
-    println!("Puzzle 1 Answer: {}", answer);
+    println!("Total Distance: {}", answer);
 }
