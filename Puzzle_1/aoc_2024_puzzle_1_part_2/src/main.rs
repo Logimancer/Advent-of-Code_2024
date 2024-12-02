@@ -47,6 +47,18 @@ impl List<i64>{
         };
         differences
     }
+
+    fn similarity_score(self) -> usize {
+        //Calculates a total similarity score by adding up each number 
+        //in the left list after multiplying it by the number of times 
+        //that number appears in the right list. 
+        self.column_1.iter()
+                    .map(|x| *x as usize * 
+                    self.column_2.iter()
+                    .filter(|y| *y == x)
+                    .count())
+                    .sum()
+    }
 }
  
 fn main() {
@@ -63,6 +75,8 @@ fn main() {
     list.order();
 
     puzzle_1_part_1(list.clone());
+
+    puzzle_1_part_2(list);
 }
 
 fn puzzle_1_part_1(list: List<i64>) {
@@ -77,6 +91,5 @@ fn puzzle_1_part_1(list: List<i64>) {
 }
 
 fn puzzle_1_part_2(list: List<i64>) {
-    //iter through column one and count occurances in column 2
-
+    println!("Similarity Scores: {}", list.similarity_score());
 }
