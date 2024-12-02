@@ -48,15 +48,15 @@ impl List<i64>{
         differences
     }
 
-    fn similarity_score(self) -> usize {
+    fn similarity_score(self) -> u64 {
         //Calculates a total similarity score by adding up each number 
         //in the left list after multiplying it by the number of times 
         //that number appears in the right list. 
         self.column_1.iter()
-                    .map(|x| *x as usize * 
+                    .map(|x| *x as u64* 
                     self.column_2.iter()
                     .filter(|y| *y == x)
-                    .count())
+                    .count() as u64)
                     .sum()
     }
 }
