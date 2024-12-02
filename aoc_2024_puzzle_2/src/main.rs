@@ -70,20 +70,17 @@ impl Report<u64> {
         }
         let mut dist_acceptable = Some(false);
         loop {
-            if let difference = level_iter.next().unwrap().abs_diff(**level_iter.peek().unwrap()) {  
-                Some(i) => { let distance_ok = match difference {
+            let dist_acceptable = match level_iter.next().unwrap().abs_diff(**level_iter.peek().unwrap(0)) {  
                             1..4 => true,
                             _ => false
-                        }
-                    };
-            }
-        }
-
-        println!("asc or desc: {}", asc_desc); 
-        true
+                        };
+            if dist_acceptable == false {break};        
+            };
+        println!("asc or desc: {}, dist good? {:?}", asc_desc, dist_acceptable); 
+            true
     }
+
 }
- 
 fn main() {
     let args: Vec<String> = env::args().collect();
 
