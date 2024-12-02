@@ -6,6 +6,7 @@ where P: AsRef<Path>, {
     Ok(io::BufReader::new(file).lines())
 }
 
+#[derive(Clone)]
 struct List<T> {
     column_1: Vec<T>,
     column_2: Vec<T>, 
@@ -61,6 +62,11 @@ fn main() {
     //order lists
     list.order();
 
+    puzzle_1_part_1(list.clone());
+}
+
+fn puzzle_1_part_1(list: List<i64>) {
+
     //compute differences of each line
     let differences = list.difference();
 
@@ -68,4 +74,9 @@ fn main() {
     let answer: u64 = differences.iter().sum();
 
     println!("Total Distance: {}", answer);
+}
+
+fn puzzle_1_part_2(list: List<i64>) {
+    //iter through column one and count occurances in column 2
+
 }
