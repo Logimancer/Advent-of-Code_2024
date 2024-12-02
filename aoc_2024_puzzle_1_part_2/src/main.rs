@@ -24,7 +24,8 @@ impl List<i64>{
     fn process_txt_file(&mut self, file_path: &String) {
         if let Ok(lines) = read_lines(file_path) {
             for line in lines.flatten() {
-                //would have used collect to tupple in itertools, but wanted to keep it std :P    
+                //would have used collect to tupple in itertools
+                //but wanted to keep it std :P    
                 let numbers: Vec<&str> = line.split_whitespace().collect(); 
                 self.column_1.push(numbers[0].parse().unwrap());
                 self.column_2.push(numbers[1].parse().unwrap());
@@ -53,11 +54,11 @@ impl List<i64>{
         //in the left list after multiplying it by the number of times 
         //that number appears in the right list. 
         self.column_1.iter()
-                    .map(|x| *x as u64* 
-                    self.column_2.iter()
-                    .filter(|y| *y == x)
-                    .count() as u64)
-                    .sum()
+                    .map(|x| *x as u64 * 
+                        self.column_2.iter()
+                        .filter(|y| *y == x)
+                        .count() as u64)
+                        .sum()
     }
 }
  
