@@ -1,5 +1,5 @@
 //AoC 2024 Puzzle 2 Part 1 (is it safe?)
-use std::{ clone, collections::btree_set::Difference, env, fs::File, io::{ self, BufRead }, path::Path };
+use std::{ env, fs::File, io::{ self, BufRead }, path::Path };
 
 fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>>
 where P: AsRef<Path>, {
@@ -28,8 +28,11 @@ impl Data<u64> {
             }
         }
     }
-}
 
+    fn safe_report_count(&self) -> usize {
+        self.reports.iter().filter(|x| x.is_safe()).count()
+    }
+}
 
 struct Report<T> {
     levels: Vec<T>, 
@@ -51,36 +54,31 @@ impl Report<u64> {
     }
 
     fn is_safe(&self) -> bool {
-        let mut level_iter = self.levels.iter().peekable();
+        let level_iter = self.levels.iter();
         //are levels descending only?
-        let asc_desc = (level_iter.clone().is_sorted_by(|a, b| a > b) |
+        let asc_desc = level_iter.clone().is_sorted_by(|a, b| a > b) |
         //are levels ascending only?
-        level_iter.clone().is_sorted_by(|a, b| a < b)) ;
+        level_iter.clone().is_sorted_by(|a, b| a < b);
         
         //did any two levels adjacent to eachother differ by less than one or 
         //more than three?
-        while let Some(distance_safe) = level_iter.peek() {
-            let difference = distance_safe.abs_diff(*level_iter.next().unwrap());
-            if difference > 1 
-            && difference < 4 {
-                println!("true"); 
-            }  else {
-                println!("false");
-            }
-        }
-        let mut dist_acceptable = Some(false);
-        loop {
-            let dist_acceptable = match level_iter.next().unwrap().abs_diff(**level_iter.peek().unwrap(0)) {  
-                            1..4 => true,
-                            _ => false
-                        };
-            if dist_acceptable == false {break};        
-            };
-        println!("asc or desc: {}, dist good? {:?}", asc_desc, dist_acceptable); 
-            true
+        let differences: Vec<_> = self.levels
+                                    .windows(2)
+                                    .collect::<Vec<_>>()
+                                    .iter()
+                                    .map(|a| a[0].abs_diff(a[1]))
+                                    .collect();                                           
+        let acceptable_distances = 1..4;
+        let acceptable_diffs:Vec<bool> = differences.iter().map(|x| acceptable_distances.contains(x)).collect(); 
+        
+        //if none of the adjacent levels are more than 3 apart and they are in ascending or decending
+        //return true
+        !acceptable_diffs.contains(&false) && asc_desc    
     }
 
+
 }
+
 fn main() {
     let args: Vec<String> = env::args().collect();
 
@@ -91,15 +89,5 @@ fn main() {
     //process input into list of reports
     data.process_txt_file(file_path);
 
-//    for report in data.reports {
-//        let mut level_total = 0;
-//        for level in report.levels {
-//            level_total += level;
-//        }
-//        println!("{}", level_total);
-//    }
-
-    for report in data.reports {
-        report.is_safe();
-    }
+    println!("{} report(s) are safe", data.safe_report_count());
 }
