@@ -1,4 +1,4 @@
-//AoC 2024 Puzzle 2 Part 1 (is it safe?)
+//AoC 2024 Puzzle 2 Part 2 (is it safe?)
 use std::{ env, fs::File, io::{ self, BufRead }, iter::Filter, path::Path, usize };
 
 fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>>
