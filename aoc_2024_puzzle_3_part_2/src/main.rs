@@ -23,41 +23,23 @@ impl<T: std::str::FromStr
         self.input = read_to_string(file_path).expect("file error");
     }
 
-    //TODO: add filter for do()s and dont()s
-    fn remove_donts(&self) {
-        let dont_locs = self.input.match_indices("don't()");
-        let do_locs = self.input.match_indices("do()");
-        let mut inced_dont_locs: Vec<usize> = dont_locs.clone().map(|x| x.0 + 1).collect();
-        let adj_do_locs:Vec<usize> = do_locs.clone().map(|x| x.0).filter(|&x| x > *inced_dont_locs.first().unwrap()).collect();
-        let mut peekable_adj_do_locs = adj_do_locs.iter().peekable();
-        
-        let mut counter = 0; 
-        let mut zipped_locs:Vec<(&usize, usize)> = inced_dont_locs.iter().zip(adj_do_locs).collect();
-        for ziper in zipped_locs.clone() {
-            counter = counter + 1;
-            println!("zipped {}: {} {}", counter, ziper.0, ziper.1);
-        }
-        
-        zipped_locs.reverse();
-        let mut index = zipped_locs.len() - 2;
-        let mut remove_locs = Vec::new();
-        remove_locs.push(zipped_locs[index + 1]);
-        loop { 
-            let zip = zipped_locs.pop().unwrap();
-//            println!("zip {} {}", zip.0, zip.1);
-//            println!("zip index {} {}", zipped_locs[index].0, zipped_locs[index].1);
-            if remove_locs.last().unwrap().1 < *zipped_locs[index].0 {
-                remove_locs.push(zipped_locs[index]);
-            }
-
-//            println!("{} {} ", zipped_locs.len(), index);
-            if zipped_locs.is_empty() || index == 0 { break; }
-            if index > 0 {index -= 1;}
+    fn remove_donts(&mut self) -> String {
+        let regex = Regex::new(r"(don't\(\))(.*?)(do\(\))").unwrap();
+        let mut chunks_to_remove = Vec::new();
+        let input_analyze = self.input.clone(); 
+        for (_, [_dont, code_to_remove, _doo]) 
+        in regex
+        .captures_iter(input_analyze.as_str())
+        .map(|c| c.extract()) {
+            chunks_to_remove.push(code_to_remove);
         }
 
-        for zip in remove_locs {
-            println!("{} {}", zip.0, zip.1);
-        };
+        let mut cleaned_data = self.input.clone();    
+        for chunk in chunks_to_remove {
+            cleaned_data = cleaned_data.replace(chunk, "");
+        }
+
+        cleaned_data
     }
 
     fn find_muls(&self) -> Vec<Mul<T>> where T: FromStr<Err : Debug>  {
@@ -116,7 +98,23 @@ fn main() {
 
     data.muls = data.find_muls();
 
+    println!("before removing don't code:");
+    println!("{}", data.input);
     println!("Mul count: {}", data.muls.iter().count());
     println!("Answer: {}", data.answer());
-    data.remove_donts();
+    println!("--------------------------------------");
+
+    let cleaned_input = data.clone().remove_donts();
+   
+    let mut cleaned_data:Data<u64> = Data::new();
+   
+    cleaned_data.input = cleaned_input;
+   
+    cleaned_data.muls = cleaned_data.find_muls();
+
+    println!("After removing don't code:");
+    println!("{}", cleaned_data.input);
+    println!("Mul count: {}", cleaned_data.muls.iter().count());
+    println!("Answer: {}", cleaned_data.answer());
+
 }
