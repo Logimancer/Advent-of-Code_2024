@@ -44,15 +44,15 @@ impl<T: std::str::FromStr
         remove_locs.push(zipped_locs[index + 1]);
         loop { 
             let zip = zipped_locs.pop().unwrap();
-            println!("zip {} {}", zip.0, zip.1);
-            println!("zip index {} {}", zipped_locs[index].0, zipped_locs[index].1);
-            if zip.1 < *zipped_locs[index].0 {
+//            println!("zip {} {}", zip.0, zip.1);
+//            println!("zip index {} {}", zipped_locs[index].0, zipped_locs[index].1);
+            if remove_locs.last().unwrap().1 < *zipped_locs[index].0 {
                 remove_locs.push(zipped_locs[index]);
             }
 
-            if zipped_locs.is_empty() { break; }
-            println!("{}", zipped_locs.len())
-            else{if zipped_locs.len()  1 {index -= 1;}}
+//            println!("{} {} ", zipped_locs.len(), index);
+            if zipped_locs.is_empty() || index == 0 { break; }
+            if index > 0 {index -= 1;}
         }
 
         for zip in remove_locs {
