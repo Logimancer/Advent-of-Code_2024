@@ -1,7 +1,7 @@
 //AoC 2024 Puzzle 3 Part 2 
 //This is a dirty version. Structually idomatic, but not very functional
 
-use std::{ env, fs::read_to_string, str::FromStr, fmt::Debug, ops::AddAssign };
+use std::{ env, fmt::Debug, fs::read_to_string, iter, ops::AddAssign, str::FromStr };
 use regex::Regex;
 
 #[derive(Clone)]
@@ -24,6 +24,41 @@ impl<T: std::str::FromStr
     }
 
     //TODO: add filter for do()s and dont()s
+    fn remove_donts(&self) {
+        let dont_locs = self.input.match_indices("don't()");
+        let do_locs = self.input.match_indices("do()");
+        let mut inced_dont_locs: Vec<usize> = dont_locs.clone().map(|x| x.0 + 1).collect();
+        let adj_do_locs:Vec<usize> = do_locs.clone().map(|x| x.0).filter(|&x| x > *inced_dont_locs.first().unwrap()).collect();
+        let mut peekable_adj_do_locs = adj_do_locs.iter().peekable();
+        
+        let mut counter = 0; 
+        let mut zipped_locs:Vec<(&usize, usize)> = inced_dont_locs.iter().zip(adj_do_locs).collect();
+        for ziper in zipped_locs.clone() {
+            counter = counter + 1;
+            println!("zipped {}: {} {}", counter, ziper.0, ziper.1);
+        }
+        
+        zipped_locs.reverse();
+        let mut index = zipped_locs.len() - 2;
+        let mut remove_locs = Vec::new();
+        remove_locs.push(zipped_locs[index + 1]);
+        loop { 
+            let zip = zipped_locs.pop().unwrap();
+            println!("zip {} {}", zip.0, zip.1);
+            println!("zip index {} {}", zipped_locs[index].0, zipped_locs[index].1);
+            if zip.1 < *zipped_locs[index].0 {
+                remove_locs.push(zipped_locs[index]);
+            }
+
+            if zipped_locs.is_empty() { break; }
+            println!("{}", zipped_locs.len())
+            else{if zipped_locs.len()  1 {index -= 1;}}
+        }
+
+        for zip in remove_locs {
+            println!("{} {}", zip.0, zip.1);
+        };
+    }
 
     fn find_muls(&self) -> Vec<Mul<T>> where T: FromStr<Err : Debug>  {
         let regex = Regex::new(r"mul\(([0-9]+),([0-9]+)\)").unwrap();
@@ -83,4 +118,5 @@ fn main() {
 
     println!("Mul count: {}", data.muls.iter().count());
     println!("Answer: {}", data.answer());
+    data.remove_donts();
 }
