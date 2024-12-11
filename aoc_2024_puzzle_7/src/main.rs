@@ -1,4 +1,4 @@
-use std::{ env, error::Error, fs::File, io::{ self, BufRead }, ops::Index, path::Path };
+use std::{ env, error::Error, fs::File, io::{ self, BufRead }, ops::{Index, Shl, Shr}, path::Path, result };
 
 fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>>
 where P: AsRef<Path>, {
@@ -10,7 +10,23 @@ where P: AsRef<Path>, {
 struct Equation {
     output: u64,
     operands: Vec<u64>,
-    operators: Vec<char>,
+    operators: Vec<Vec<u8>>,
+}
+
+fn to_bit_array(byte: u8) -> Vec<u8> {
+    let mut bits = Vec::new();
+    if byte == 0{
+        bits.push(0);
+    } else {
+        for i in 0..byte {
+            bits.push(byte.shr(i) & 1);
+        }
+    }
+    if bits.iter().count() < 2 {
+        bits.push(0);
+    }    
+    bits.reverse();
+    bits
 }
 
 impl Equation {
@@ -21,15 +37,31 @@ impl Equation {
             operators: Vec::new(),
         }
     }
+    
 
-    // mul is "*" and add is "+"
-    fn create_operator_stack(&mut self) {
-        let number_or_operators = self.operands.iter().count() - 1;
-        for n in 1..number_or_operators{
-            self.operators.push('+');
-            self.operators.push('*');
+
+    // mul is 0 and add is 1
+    fn calibration_result(&mut self) -> u64 {
+        let mut results = Vec::new();
+        for set in self.operators.clone()  {
+            let mut result = 0;
+            let mut index = 0;
+            for op in set{
+                result = self.operands[index];
+                if op == 0 {
+                    result = result * self.operands[index + 1];
+                } else {
+                    result = result + self.operands[index + 1];
+                }
+                index += 1; 
+            }
+            results.push(result);            
         }
-    }
+        for result in results {
+            println!("{:?}", result);
+        }
+        0
+}
 
 //number of operators - 1 to binary and then you have all the combos
 //10 19 =
@@ -51,13 +83,13 @@ impl Equation {
 //9+7*18+13 	101
 //9+7+18*13	110
 //9+7+18+13	111
-
-//    fn calibration_result(&self) -> Option<u64> {
-//        let mut result: u64 = 0;
-//        for operand in self.operands {
-//
-//        }
-//    }
+    fn create_operator_stack(&mut self) {
+        let number_or_operators = (self.operands.iter().count() - 1) as u8;
+        
+        for n in 0..=number_or_operators {
+            self.operators.push(to_bit_array(n));
+        } 
+    }
 }
 
 fn txt_file_to_equations(file_path: &String) -> Vec<Equation> {
@@ -89,7 +121,11 @@ fn main() {
 
     let file_path = &args[1];
     
-    let equations = txt_file_to_equations(file_path);
+    let mut equations = txt_file_to_equations(file_path);
 
-    println!("{:?}", equations);
+    println!("{:?}", equations.first());
+
+    let _ = equations[0].create_operator_stack();
+
+    let _ = equations[0].calibration_result();
 }
