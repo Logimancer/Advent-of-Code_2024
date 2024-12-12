@@ -44,7 +44,7 @@ impl Equation {
     }
     
     //the big offender... this ugly!
-    fn calculate_possible_calibration_results(&mut self) {
+    fn calculate_possible_calibration_results(&mut self) -> Vec<u64> {
         // mul is 0 and add is 1
         let mut results = Vec::new();
         let operators:Vec<Vec<u32>> = self.operators.iter().map(|operator_stack| operator_stack.iter().map(|&operator| operator).collect::<Vec<u32>>()).collect();
@@ -67,11 +67,11 @@ impl Equation {
                 }
             results.push(result);
         }
-        self.results = results;
+        results
     }
     
     fn create_operator_stack(&mut self) -> Vec<Vec<u32>> {
-        // the number of combinations is n..n^2 (like binary)
+        // the number of combinations is 2^n (like binary)
         //10 19 =
         //10*19		00
         //10+19		01
@@ -101,7 +101,17 @@ impl Equation {
         }
         operators_stack 
     }
+
+    fn return_valid_result(&self) -> Option<u64> {
+        self.results.iter().find(|result| **result == self.output).copied()
+    }
+
+//    fn answer(&self, valid_results: Vec<&u64>) {
+//        valid_results.
+//    }
 }
+
+    
 
 fn txt_file_to_equations(file_path: &String) -> Vec<Equation> {
     let mut equations = Vec::new();
@@ -126,6 +136,19 @@ fn txt_file_to_equations(file_path: &String) -> Vec<Equation> {
     equations
 }
 
+fn answer(equations: Vec<Equation>) -> u64 {
+    let mut answer = 0;
+    for mut equation in equations {
+        equation.operators = equation.create_operator_stack();
+        equation.results = equation.calculate_possible_calibration_results();
+        answer += match equation.return_valid_result() {
+            Some(i) => i,
+            None => 0,
+        };
+    }
+    answer
+}
+
 fn main() {
     
     let args: Vec<String> = env::args().collect();
@@ -134,11 +157,6 @@ fn main() {
     
     let equations = txt_file_to_equations(&file_path);
 
-    for mut equation in equations {
-        equation.operators = equation.create_operator_stack();
-        equation.calculate_possible_calibration_results();
-        println!("Equation: {:?}", equation);
-    }
-
+    println!("The answer is: {}", answer(equations));
 
 }
