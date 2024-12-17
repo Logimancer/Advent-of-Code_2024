@@ -16,6 +16,7 @@ enum State {
 struct ChronospatialComputer {
    cpu: Cpu,
    ram: Ram,
+   output: Vec<String>,
    state: State,
 }
 impl ChronospatialComputer {
@@ -23,6 +24,7 @@ impl ChronospatialComputer {
         Self {
             cpu: Cpu::new(),
             ram: Ram::new(),
+            output: Vec::new(),
             state: State::Stopped,
         }
     }
@@ -66,7 +68,7 @@ impl ChronospatialComputer {
                 Instructions::bst => self.cpu.bst(current_operand),
                 Instructions::jnz => self.cpu.jnz(current_operand),
                 Instructions::bxc => self.cpu.bxc(current_operand),
-                Instructions::out => self.cpu.out(current_operand),
+                Instructions::out => self.output.push(self.cpu.out(current_operand)),
                 Instructions::bdv => self.cpu.bdv(current_operand),
                 Instructions::cdv => self.cpu.cdv(current_operand),               
             }
@@ -75,7 +77,22 @@ impl ChronospatialComputer {
 
     }
 
+    fn print_output(&self){
+        let output = self.output.iter().map(|out| out.to_owned() + &",").collect::<Vec<String>>();
+
+        let mut output_string = String::new();
+        for string in output {
+            output_string = output_string.clone() + string.as_str();
+        }
+
+        if output_string.ends_with(",") {
+            output_string.drain(output_string.len() - 1 ..);
+        }
+        println!("Output: {}", output_string);
+    }
+
     fn print_state(&self) {
+        println!("--------------------------------------------------------------");
         println!("Internal State of Computer");
         println!("Cpu:");
         println!("Register A: {}", self.cpu.a_register);
@@ -87,6 +104,7 @@ impl ChronospatialComputer {
             print!("{},", element)
         }
         println!("");
+        println!("**************************************************************");
     }
 }
 struct Cpu {
@@ -105,15 +123,28 @@ impl Cpu {
             instruction_pointer: 0,
         }
     }
+
+    fn combo_operand(&self, operand: u64) -> Result<u64, String> {
+        match operand {
+            0u64..=3u64 => Ok(operand),
+            4 => Ok(self.a_register),
+            5 => Ok(self.b_register),
+            6 => Ok(self.c_register),
+            _ => Err(format!("Invalid Combo Operator")),
+        }
+    }
     
     fn adv(&mut self, operand: u64) {
     //The adv instruction (opcode 0) performs division. 
-    //The numerator is the value in the A register. 
-    //The denominator is found by raising 2 to the power of the instruction's combo operand. 
+    //The numerator(dividend) is the value in the A register. 
+    //The denominator(divisor) is found by raising 2 to the power of the instruction's combo operand. 
     //(So, an operand of 2 would divide A by 4 (2^2); an operand of 5 would divide A by 2^B.) 
     //The result of the division operation is truncated to an integer and then written to the A register.
-        print!("adv, operand: {}. ", operand);
-        let numerator = self.a_register;
+//    println!("adv, operand: {}. ", operand);
+        let dividend = self.a_register;
+        let divisor = 2u64.pow(self.combo_operand(operand).unwrap().try_into().unwrap());
+        let quotient = dividend / divisor;
+        self.a_register = quotient;
 
         self.instruction_pointer += 2;
     }
@@ -122,8 +153,9 @@ impl Cpu {
     //The bxl instruction (opcode 1) 
     //calculates the bitwise XOR of register B and the instruction's literal operand, 
     //then stores the result in register B.
-        println!("bxl, operand: {}", operand);
-    
+//        println!("bxl, operand: {}", operand);
+        self.b_register = self.b_register ^ operand;
+
         self.instruction_pointer += 2;
     }
     
@@ -131,7 +163,8 @@ impl Cpu {
     //The bst instruction (opcode 2) 
     //calculates the value of its combo operand modulo 8 (thereby keeping only its lowest 3 bits), 
     //then writes that value to the B register.
-        println!("bst, operand: {}", operand);
+//        println!("bst, operand: {}", operand);
+        self.b_register = self.combo_operand(operand).unwrap() % 8;
         
         self.instruction_pointer += 2;
     }
@@ -143,9 +176,12 @@ impl Cpu {
     //it jumps by setting the instruction pointer to the value of its literal operand; 
     //if this instruction jumps, 
     //the instruction pointer is not increased by 2 after this instruction.
-        println!("jnz, operand: {}", operand);
-    
-        self.instruction_pointer += 2;
+//        println!("jnz, operand: {}", operand);
+        if self.a_register != 0 {
+            self.instruction_pointer = operand;
+        } else { 
+            self.instruction_pointer += 2;
+        }
     }
     
     fn bxc(&mut self, operand: u64) {
@@ -153,19 +189,23 @@ impl Cpu {
     //calculates the bitwise XOR of register B and register C, 
     //then stores the result in register B. 
     //(For legacy reasons, this instruction reads an operand but ignores it.)
-        println!("bxc, operand: {}", operand);
-    
+//        println!("bxc, operand: {}", operand);
+        let _ignore = operand;
+        self.b_register = self.b_register ^ self.c_register;
+
         self.instruction_pointer += 2;
     }
     
-    fn out(&mut self, operand: u64) {
+    fn out(&mut self, operand: u64) -> String {
     //The out instruction (opcode 5) 
     //calculates the value of its combo operand modulo 8, 
     //then outputs that value. 
     //(If a program outputs multiple values, they are separated by commas.)
-        println!("out, operand: {}", operand);
-
+//        println!("out, operand: {}", operand);
+//        println!("OUT: {}", self.combo_operand(operand).unwrap() % 8);
+        
         self.instruction_pointer += 2;
+        format!("{}", self.combo_operand(operand).unwrap() % 8)
     }
     
     fn bdv(&mut self, operand: u64) {
@@ -173,7 +213,11 @@ impl Cpu {
     //works exactly like the adv instruction 
     //except that the result is stored in the B register. 
     //(The numerator is still read from the A register.)
-        println!("bdv, operand: {}", operand);
+//        println!("bdv, operand: {}", operand);
+        let dividend = self.a_register;
+        let divisor = 2u64.pow(self.combo_operand(operand).unwrap().try_into().unwrap());
+        let quotient = dividend / divisor;
+        self.b_register = quotient;
 
         self.instruction_pointer += 2;
     }
@@ -183,7 +227,11 @@ impl Cpu {
     //works exactly like the adv instruction 
     //except that the result is stored in the C register. 
     //(The numerator is still read from the A register.)
-        println!("cdv, operand: {}", operand);
+//        println!("cdv, operand: {}", operand);
+        let dividend = self.a_register;
+        let divisor = 2u64.pow(self.combo_operand(operand).unwrap().try_into().unwrap());
+        let quotient = dividend / divisor;
+        self.c_register = quotient;
 
         self.instruction_pointer += 2;
     }
@@ -252,12 +300,15 @@ fn main() {
 
     chronopatial_computer.initialize_from_file(initial_state_file_path);
     
+    chronopatial_computer.print_state();
+    
     chronopatial_computer.run();
 
     while chronopatial_computer.state == State::Running {
         chronopatial_computer.cycle();
     }
 
-    println!("Computer Halted");
+    chronopatial_computer.print_output();
 
+    println!("Computer Halted");
 }
