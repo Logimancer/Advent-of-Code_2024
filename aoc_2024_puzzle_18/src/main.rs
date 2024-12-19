@@ -28,7 +28,7 @@ struct Grid<T> {
     cells: Vec<Vec<T>>
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Cell {
     valid: bool,
     explored: bool,
@@ -48,8 +48,7 @@ impl Cell {
     }
     
     fn possible_adjacent_cells(&self, boundries: Coordinates) -> Vec<Coordinates> {
-        let mut adjacent_edges = Vec::new();
-        println!("Entered pac, cell operating on is {},{}", self.coordinates.0, self.coordinates.1);
+        let mut possible_adjacent_edges = Vec::new();
         for direction in Directions::iterator() {
             let adjacent_cell = match direction {
                 Directions::Left => (self.coordinates.0 - 1, self.coordinates.1),  
@@ -59,14 +58,14 @@ impl Cell {
             };
             
             //I don't know what I'm doing wrong, but the ! operator isn't working for the below if statement!
-            if adjacent_cell.0.is_positive() &&
+            if adjacent_cell.0 >= 0 &&
                adjacent_cell.0 < boundries.0 + 1 &&
-               adjacent_cell.1.is_positive() &&
+               adjacent_cell.1 >= 0 &&
                adjacent_cell.1 < boundries.1 + 1 {
-                    adjacent_edges.push(adjacent_cell);
+                    possible_adjacent_edges.push(adjacent_cell);
                } 
         }
-        adjacent_edges
+        possible_adjacent_edges
     }
 }
 
@@ -170,23 +169,23 @@ impl MemorySpace {
         }
         adjacent_edges
     }
-//    fn breadth_first_search(&mut self, goal: Goal) -> isize{
-//        let mut queue = Vec::new();
-//        let (x, y) = ROOT;
-//        self.grid.update_cell_explored(x, y, true);
-//        queue.push((x, y));
-//        while !queue.is_empty() {
-//            let v = queue.last().unwrap();
-//            if v == goal {
-//                return v
-//            }
-//            //find adjacent edes of cell
-//            for al
-//
-//        }
-//
-//        0
-//    }
+    fn breadth_first_search(&mut self, goal: Goal) -> isize{
+        let mut queue = Vec::new();
+        let (x, y) = ROOT;
+        self.grid.update_cell_explored(x, y, true);
+        queue.push((x, y));
+        while !queue.is_empty() {
+            let v = queue.last().unwrap();
+            if v == goal {
+                return v
+            }
+            let adjacent_edges = self.find_adjacent_edges(v);
+            for 
+
+        }
+
+        0
+    }
 }
 
 
@@ -209,15 +208,21 @@ fn main() {
 
     memory.load_corrupted_from_file(file_path);
 
-    println!("{}", memory);
     for cells in memory.grid.cells.clone() {
         for cell in cells {
-            println!("Possible adjacent cells of {}, {}:", cell.coordinates.0, cell.coordinates.1);
-            let possible_adjacent_cells = cell.possible_adjacent_cells(memory.boundries);
-            for possible_adjacent_cell in possible_adjacent_cells {
-                println!("possibly adjecent: {}, {}", possible_adjacent_cell.0, possible_adjacent_cell.1);
+            if cell.valid {    
+                println!("Possible adjacent cells of {}, {}:", cell.coordinates.0, cell.coordinates.1);
+//                let possible_adjacent_cells = cell.possible_adjacent_cells(memory.boundries);
+//                for possible_adjacent_cell in possible_adjacent_cells {
+//                    println!("possibly adjecent: {}, {}", possible_adjacent_cell.0, possible_adjacent_cell.1);
+//                }
+                let adjacent_cells = memory.find_adjacent_edges(cell.coordinates);
+                for cell in adjacent_cells{
+                    println!("Adjacent Cell {}, {}", cell.0, cell.1);
+                }
             }
-            let adjacent_cells = memory.find_adjacent_edges(cell.coordinates);
         }
     }
+
+    println!("{}", memory);
 }
