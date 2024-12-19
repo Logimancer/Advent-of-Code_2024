@@ -1,5 +1,5 @@
 //Puzzle 18: RAM Run 
-use std::{ env, fmt, fs::File, io::{ self, BufRead }, path::Path, slice::Iter };
+use std::{ collections:: VecDeque, env, fmt, fs::File, io::{ self, BufRead }, path::Path, slice::Iter };
 use self::Directions::*;
 
 fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>>
@@ -85,12 +85,22 @@ impl Grid<Cell> {
         }
     }
 
-    fn update_cell_valid(&mut self, x: isize, y: isize, value: bool) {
+    fn update_cell_valid(&mut self, coordinates: Coordinates, value: bool) {
+        let x = coordinates.0;
+        let y = coordinates.1;
         self.cells[y as usize ][x as usize].valid = value;
     }
 
-    fn update_cell_explored(&mut self, x: isize, y: isize, value: bool) {
-        self.cells[y as usize][x as usize].valid = value;
+    fn update_cell_explored(&mut self, coordinates: Coordinates, value: bool) {
+        let x = coordinates.0;
+        let y = coordinates.1;
+        self.cells[y as usize][x as usize].explored = value;
+    }
+
+    fn update_cell_parent(&mut self, coordinates: Coordinates, value: Coordinates) {
+        let x = coordinates.0;
+        let y = coordinates.1;
+        self.cells[y as usize][x as usize].parent = value;
     }
 
     fn coordinates_to_cell(&self, coordinates: Coordinates) -> &Cell {
@@ -125,6 +135,7 @@ const ROOT: Root = (0, 0);
 struct MemorySpace {
     grid: Grid<Cell>,
     boundries: Coordinates,
+    shortest_path: Vec<Coordinates>,
 }
 
 impl MemorySpace {
@@ -133,6 +144,7 @@ impl MemorySpace {
         Self {
             grid: Grid::new(x, y),
             boundries: (x, y),
+            shortest_path: Vec::new(),
         }
     }
 
@@ -149,9 +161,9 @@ impl MemorySpace {
             
             for coordinates in coordinates_pairs{
                 let (x, y) = (coordinates[0], coordinates[1]);
-                println!("{:?}", coordinates);
+                //println!("{:?}", coordinates);
                 
-                self.grid.update_cell_valid(x, y, false);
+                self.grid.update_cell_valid((x, y), false);
             }
         }
     }
@@ -169,23 +181,60 @@ impl MemorySpace {
         }
         adjacent_edges
     }
-    fn breadth_first_search(&mut self, goal: Goal) -> isize{
-        let mut queue = Vec::new();
+    fn breadth_first_search_parents(&mut self, goal: Goal) -> Vec<Coordinates>{
+        let mut queue = VecDeque::new();
+        let mut parents = Vec::new();
         let (x, y) = ROOT;
-        self.grid.update_cell_explored(x, y, true);
-        queue.push((x, y));
+        self.grid.update_cell_explored((x, y), true);
+        queue.push_front((x, y));
         while !queue.is_empty() {
-            let v = queue.last().unwrap();
+            //let mut first_out = queue.clone();
+            let v = queue.pop_back().unwrap();
+            //println!("v: {}, {}", v.0, v.1);
             if v == goal {
-                return v
+                return parents
             }
             let adjacent_edges = self.find_adjacent_edges(v);
-            for 
-
+            for w in adjacent_edges {
+                let w_cell = self.grid.coordinates_to_cell(w);
+                if !w_cell.explored  {
+                    self.grid.update_cell_explored(w, true);
+                    self.grid.update_cell_parent(w, v);
+                    parents.push((v.0,v.1));       
+                    queue.push_front(w);
+                }
+            }
         }
-
-        0
+        vec![(0,0)]
     }
+
+    fn find_shortest_path(&mut self, goal: Coordinates) {
+        let mut parents = self.breadth_first_search_parents(goal);
+        let mut deduped_parents = Vec::new();
+        deduped_parents.push(parents.pop().unwrap());
+        while !parents.is_empty() {
+            let elem_a = parents.pop().unwrap();
+
+            if elem_a != *deduped_parents.last().unwrap_or(&elem_a) {
+                deduped_parents.push(elem_a);
+            }
+        }
+        
+        let mut valid_move_parents = Vec::new();
+        deduped_parents.reverse();
+        valid_move_parents.push(deduped_parents.pop().unwrap());
+        while !deduped_parents.is_empty() {
+            let elem_b = deduped_parents.pop().unwrap();
+            let elem_a = *valid_move_parents.last().unwrap();
+            //remove any coordinates that are more than one space away from eachother
+            if (elem_a.0 - elem_b.0).abs() + (elem_a.1 - elem_b.1).abs() == 1 {
+                valid_move_parents.push(elem_b);
+            }
+        }
+        self.shortest_path = valid_move_parents;
+
+    }
+
 }
 
 
@@ -208,21 +257,31 @@ fn main() {
 
     memory.load_corrupted_from_file(file_path);
 
-    for cells in memory.grid.cells.clone() {
-        for cell in cells {
-            if cell.valid {    
-                println!("Possible adjacent cells of {}, {}:", cell.coordinates.0, cell.coordinates.1);
-//                let possible_adjacent_cells = cell.possible_adjacent_cells(memory.boundries);
-//                for possible_adjacent_cell in possible_adjacent_cells {
-//                    println!("possibly adjecent: {}, {}", possible_adjacent_cell.0, possible_adjacent_cell.1);
+//    for cells in memory.grid.cells.clone() {
+//        for cell in cells {
+//            if cell.valid {    
+//                println!("Possible adjacent cells of {}, {}:", cell.coordinates.0, cell.coordinates.1);
+////                let possible_adjacent_cells = cell.possible_adjacent_cells(memory.boundries);
+////                for possible_adjacent_cell in possible_adjacent_cells {
+////                    println!("possibly adjecent: {}, {}", possible_adjacent_cell.0, possible_adjacent_cell.1);
+////                }
+//                let adjacent_cells = memory.find_adjacent_edges(cell.coordinates);
+//                for cell in adjacent_cells{
+//                    println!("Adjacent Cell {}, {}", cell.0, cell.1);
 //                }
-                let adjacent_cells = memory.find_adjacent_edges(cell.coordinates);
-                for cell in adjacent_cells{
-                    println!("Adjacent Cell {}, {}", cell.0, cell.1);
-                }
-            }
-        }
-    }
+//            }
+//        }
+//    }
 
     println!("{}", memory);
+
+    let goal = memory.boundries;
+
+    memory.find_shortest_path(goal);
+
+    for coordinates in &memory.shortest_path {
+        println!("{}, {}", coordinates.0, coordinates.1);
+    }    
+    println!("Minimum Number of moves: {}", memory.shortest_path.len());  
+
 }
