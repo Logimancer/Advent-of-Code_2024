@@ -2,6 +2,8 @@
 use std::{ collections:: VecDeque, env, fmt, fs::File, io::{ self, BufRead }, path::Path, slice::Iter };
 use self::Directions::*;
 
+const GRID_SIZE:Coordinates = (6,6);
+
 fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>>
 where P: AsRef<Path>, {
     let file = File::open(filename)?;
@@ -70,7 +72,9 @@ impl Cell {
 }
 
 impl Grid<Cell> {
-    fn new(x: isize, y: isize) -> Self {
+    fn new(coordinates: Coordinates) -> Self {
+        let x = coordinates.0;
+        let y = coordinates.1;
         let mut columns = Vec::new(); 
         for current_y in 0..=y{
             let mut row = Vec::new();
@@ -140,10 +144,10 @@ struct MemorySpace {
 
 impl MemorySpace {
     //returns a sized Grid of u64s
-    fn new(x: isize, y: isize) -> Self {
+    fn new(coordinates: Coordinates) -> Self {
         Self {
-            grid: Grid::new(x, y),
-            boundries: (x, y),
+            grid: Grid::new(coordinates),
+            boundries: coordinates,
             shortest_path: Vec::new(),
         }
     }
@@ -250,7 +254,7 @@ fn main() {
 
     let file_path = &args[1];
 
-    let mut memory = MemorySpace::new(6,6);
+    let mut memory = MemorySpace::new(GRID_SIZE);
 
     memory.load_corrupted_from_file(file_path);
 
