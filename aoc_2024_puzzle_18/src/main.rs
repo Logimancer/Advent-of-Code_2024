@@ -1,8 +1,11 @@
 //Puzzle 18: RAM Run 
+//Needs refactoring (as always!)
+//see https://en.wikipedia.org/wiki/Breadth-first_search for path finding algorithm
+
 use std::{ collections:: VecDeque, env, fmt, fs::File, io::{ self, BufRead }, path::Path, slice::Iter };
 use self::Directions::*;
 
-const GRID_SIZE:Coordinates = (6,6);
+const GRID_SIZE:Coordinates = (70,70);
 
 fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>>
 where P: AsRef<Path>, {
@@ -143,7 +146,6 @@ struct MemorySpace {
 }
 
 impl MemorySpace {
-    //returns a sized Grid of u64s
     fn new(coordinates: Coordinates) -> Self {
         Self {
             grid: Grid::new(coordinates),
@@ -184,6 +186,7 @@ impl MemorySpace {
         }
         adjacent_edges
     }
+
     fn breadth_first_search_parents(&mut self, goal: Goal) -> Vec<Coordinates>{
         let mut queue = VecDeque::new();
         let mut parents = Vec::new();
@@ -238,10 +241,6 @@ impl MemorySpace {
 
 }
 
-
-
-
-
 impl fmt::Display for MemorySpace {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.grid)
@@ -266,7 +265,8 @@ fn main() {
 
     for coordinates in &memory.shortest_path {
         println!("{}, {}", coordinates.0, coordinates.1);
-    }    
+    }
+
     println!("Minimum Number of moves: {}", memory.shortest_path.len());  
 
 }
