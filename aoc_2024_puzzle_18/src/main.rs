@@ -161,7 +161,6 @@ impl MemorySpace {
             
             for coordinates in coordinates_pairs{
                 let (x, y) = (coordinates[0], coordinates[1]);
-                //println!("{:?}", coordinates);
                 
                 self.grid.update_cell_valid((x, y), false);
             }
@@ -188,9 +187,7 @@ impl MemorySpace {
         self.grid.update_cell_explored((x, y), true);
         queue.push_front((x, y));
         while !queue.is_empty() {
-            //let mut first_out = queue.clone();
             let v = queue.pop_back().unwrap();
-            //println!("v: {}, {}", v.0, v.1);
             if v == goal {
                 return parents
             }
@@ -256,22 +253,6 @@ fn main() {
     let mut memory = MemorySpace::new(6,6);
 
     memory.load_corrupted_from_file(file_path);
-
-//    for cells in memory.grid.cells.clone() {
-//        for cell in cells {
-//            if cell.valid {    
-//                println!("Possible adjacent cells of {}, {}:", cell.coordinates.0, cell.coordinates.1);
-////                let possible_adjacent_cells = cell.possible_adjacent_cells(memory.boundries);
-////                for possible_adjacent_cell in possible_adjacent_cells {
-////                    println!("possibly adjecent: {}, {}", possible_adjacent_cell.0, possible_adjacent_cell.1);
-////                }
-//                let adjacent_cells = memory.find_adjacent_edges(cell.coordinates);
-//                for cell in adjacent_cells{
-//                    println!("Adjacent Cell {}, {}", cell.0, cell.1);
-//                }
-//            }
-//        }
-//    }
 
     println!("{}", memory);
 
