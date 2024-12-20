@@ -1,7 +1,7 @@
 //Puzzle 19: Linen Layout
 //Don't forget to bring a towel
 
-use std::{ clone, env, fmt, fs::File, io::{ self, BufRead }, path::Path, result };
+use std::{ env, fmt, fs::File, io::{ self, BufRead }, path::Path, };
 
 fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>>
 where P: AsRef<Path>, {
