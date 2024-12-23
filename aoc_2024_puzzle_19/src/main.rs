@@ -42,7 +42,7 @@ impl Towels {
                         |a , b|  a.len().cmp(&b.len()).reverse());
                 } else if !line.as_ref().unwrap().is_empty() {
                     //it is a desired design
-                    self.desired_designs.push(line.unwrap());
+                    self.desired_designs.push(line.unwrap().trim().to_string());
                 }
            } 
         }
@@ -51,18 +51,12 @@ impl Towels {
     fn number_of_possible_designs(&mut self) {
         for mut desired_design in self.desired_designs.clone() {
             let mut possible_design = String::new();
-            //println!("Desired Design {}", desired_design);
             let mut last_possible_design = String::new();
             while !desired_design.is_empty(){ 
-            //loop{
                 for towel in self.towel_patterns.clone() {
-                    //println!("towel: {}", towel);
                     match desired_design.find(&towel) {
                         Some(position) => {
-                            if position == 0 {
-                                possible_design.push_str(desired_design.drain(0..towel.len()).as_str());
-                                //println!("byte_index {}, possible design {}", position, possible_design);
-                            };
+                            possible_design.push_str(desired_design.drain(position..position+towel.len()).as_str());
                         }
                         None => {
                             ()
@@ -72,13 +66,10 @@ impl Towels {
                 if last_possible_design != possible_design {
                     last_possible_design = possible_design.clone();
                 } else {
-                    //println!("final possible design: {}", possible_design);
                     break;
                 }
             }
-            //println!("Desired Design: {} vs. Possible Design {}", desired_design, possible_design);
-            if desired_design.is_empty() {
-                //println!("DING! {}", possible_design);
+            if desired_design.trim().to_string().is_empty() {
                 self.possible_designs.push(possible_design);
             }
         }
@@ -91,7 +82,8 @@ impl fmt::Display for Towels {
         //I think per idiom, that these are suppose to be for loops since they writing as a side effect
         let _ = writeln!(f, "Available Towel Patterns:");
         let _ = self.towel_patterns.iter().map(|x| write!(f, "{} ", x)).collect::<Vec<_>>();
-        let _ = writeln!(f,"\nDesired Designs:");
+        let _ = writeln!(f, "\nAvailable Towel Patterns Count: {}", self.towel_patterns.len());
+        let _ = writeln!(f,"Desired Designs:");
         let _ = self.desired_designs.iter().map(|x| writeln!(f, "{}", x)).collect::<Vec<_>>();
         let _ = writeln!(f,"Possible Designs:");
         let _ = self.possible_designs.iter().map(|x| writeln!(f,"{}", x)).collect::<Vec<_>>();
