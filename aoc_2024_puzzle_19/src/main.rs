@@ -1,7 +1,7 @@
 //Puzzle 19: Linen Layout
 //Don't forget to bring a towel
 
-use std::{ env, fmt, fs::File, io::{ self, BufRead }, path::Path, };
+use std::{ env, fmt, fs::File, io::{ self, BufRead }, iter::repeat, path::Path };
 
 fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>>
 where P: AsRef<Path>, {
@@ -49,14 +49,18 @@ impl Towels {
     }
 
     fn number_of_possible_designs(&mut self) {
-        for mut desired_design in self.desired_designs.clone() {
-            let mut possible_design = String::new();
+        for desired_design_imm in self.desired_designs.clone() {
+            let mut desired_design = desired_design_imm.clone();
+            let mut possible_design = repeat("x").take(desired_design.len()).collect::<String>();
             let mut last_possible_design = String::new();
             while !desired_design.is_empty(){ 
                 for towel in self.towel_patterns.clone() {
                     match desired_design.find(&towel) {
                         Some(position) => {
-                            possible_design.push_str(desired_design.drain(position..position+towel.len()).as_str());
+                            println!("Towel: {}", towel);
+                            let half_a_corwn = desired_design.drain(position..position+towel.len());
+                            println!("bedlam: {}",half_a_corwn.as_str());
+                            possible_design.replace_range(position..position+towel.len(), half_a_corwn.as_str());
                         }
                         None => {
                             ()
@@ -69,7 +73,8 @@ impl Towels {
                     break;
                 }
             }
-            if desired_design.trim().to_string().is_empty() {
+            println!("Desired Vs Possible: {} {}",desired_design_imm, possible_design);
+            if desired_design_imm == possible_design {
                 self.possible_designs.push(possible_design);
             }
         }
